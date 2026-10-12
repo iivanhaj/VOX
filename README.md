@@ -1,82 +1,76 @@
 # Vox: Multilingual Collaboration Model
 
-**Vox** is a powerful collaboration tool designed to automate meeting summarization and enable efficient information retrieval. Developed for the Samsung PRISM Hackathon, Vox enhances workplace communication and productivity by integrating cutting-edge AI models.
+**Vox** is a collaboration tool designed to automate meeting summarization and enable efficient information retrieval. Built by team Vox for the Samsung PRISM Gen AI Hackathon (2024), it brings speech, summarization, translation and LLM-based retrieval together in one meeting assistant.
 
 ## Key Features
 
+- **Wake Word Activation**  
+  Vox listens on the microphone and starts when it hears its wake word, using the **MIT/ast-finetuned-speech-commands-v2** audio classifier.
+
+- **Live Transcription with Speaker Labels**  
+  Speech is transcribed with **OpenAI Whisper**, and **pyannote** speaker diarization (combined through **speechbox**) labels who said what, with timestamps.
+
 - **Automated Meeting Summarization**  
-  Vox uses the **llama-distilled-600** model to generate concise summaries of meetings, helping teams focus on key insights for better decision-making.
+  The labelled transcript is summarized into meeting minutes with the **ankitkhowal/minutes-of-meeting** model, helping teams focus on key insights for better decision-making.
+
+- **Multilingual Translation**  
+  Transcripts are translated with **facebook/nllb-200-distilled-600M** (English to German in the notebook; NLLB-200 covers 200 languages).
+
+- **Task Scheduling**  
+  A spoken request such as "set up a Meet reminder at 10:00" is turned into a Google Calendar event structure (JSON) by **Falcon-7B-instruct**.
 
 - **Interactive Chat Interface**  
-  Powered by **meta-llama/Llama-2-7b-chat-hf**, the chat interface allows seamless collaboration and interaction while retrieving information from **NotionDB**.
+  Powered by **meta-llama/Llama-2-7b-chat-hf**, the chat interface answers questions such as "What tasks are left?" using the team's **Notion** task data.
 
 - **Optimized Vector Storage**  
-  With **Llama Index**, Vox optimizes vector storage and embeddings, ensuring fast and accurate data retrieval from **NotionDB** for an enhanced user experience.
+  With **Llama Index** and **sentence-transformers/all-mpnet-base-v2** embeddings, Vox indexes the Notion data for fast and accurate retrieval.
 
 ## Tech Stack
 
-- **Langchain**
-- **Hugging Face**
+- **Hugging Face Transformers**
+- **Whisper**, **pyannote.audio**, **speechbox**
+- **NLLB-200**
+- **Llama-2-7b-chat**, **Falcon-7B-instruct**
 - **Llama Index**
-- **Transformers**
-- **NotionDB**
+- **Langchain**
+- **Notion**
 
-## Installation
+## How to Run
 
-### Prerequisites
+Everything lives in one notebook, `Vox_3&5_Gen_AI_Hackathon.ipynb`.
 
-- Python 3.8+
-- Notion API credentials
-- Hugging Face API key
-- Access to the Llama-2-7b-chat-hf model
+1. Open it in Google Colab using the badge at the top of the notebook.
+2. Use a GPU runtime (Llama-2-7b is loaded in 8-bit).
+3. Add a Hugging Face token as a Colab secret named `HF_TOKEN`. Your account needs access to `meta-llama/Llama-2-7b-chat-hf` and `pyannote/speaker-diarization`.
+4. For the task chat, put your Notion export in Google Drive at `MyDrive/Notion_DB`.
+5. Run the cells in order. The first cell installs the dependencies.
 
-### Steps
+## Architecture
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/vox.git
-   cd vox
+### Voice Module
+Wake word detection (AST speech-commands), then live transcription with Whisper.
 
-2. Install the required dependencies:
+### Transcription and Summarization Module
+Whisper and pyannote diarization produce a speaker-labelled transcript, which is summarized into minutes of the meeting.
 
-  ```bash
-  pip install -r requirements.txt
+### Translation Module
+NLLB-200 (distilled 600M) translates the transcript into another language.
 
-3. Set up your environment variables for Hugging Face and Notion API keys:
-
-  ```bash
-  export HUGGINGFACE_API_KEY='your-api-key'
-  export NOTION_API_KEY='your-api-key'
-
-4. Run the application:
-
-  ```bash
-  python app.py
-
-### Usage
-Automated Meeting Summarization
-Provide meeting transcripts, and Vox will generate concise summaries using the llama-distilled-600 model.
-
-### Interactive Chat Interface
-Collaborate with team members through the chat interface, which allows querying of NotionDB for relevant information.
-
-### Efficient Data Retrieval
-Vox uses Llama Index to optimize vector storage, enabling fast and accurate retrieval of meeting notes, documents, or other embedded data in NotionDB.
-
-### Architecture
-Summarization Module
-Leverages llama-distilled-600 for summarizing long meeting transcripts.
+### Scheduling Module
+Falcon-7B-instruct turns a natural-language request into a Google Calendar event structure.
 
 ### Chat Module
-The chat interface, powered by meta-llama/Llama-2-7b-chat-hf, interacts with NotionDB to fetch relevant data during conversations.
+The chat interface, powered by meta-llama/Llama-2-7b-chat-hf, answers questions over the team's Notion data.
 
 ### Data Storage and Retrieval
-Llama Index is used for embedding-based data retrieval, ensuring fast and accurate results.
+Llama Index with all-mpnet-base-v2 embeddings is used for embedding-based data retrieval, ensuring fast and accurate results.
 
-### Future Enhancements
-Multilingual support for the summarization and chat interface.
-Integration with platforms like Slack and Microsoft Teams.
-Advanced natural language understanding for more personalized insights.
+## Future Enhancements
 
-### License
+- Multilingual support for the chat interface.
+- Integration with platforms like Slack and Microsoft Teams.
+- Advanced natural language understanding for more personalized insights.
+
+## License
+
 This project is licensed under the MIT License.
